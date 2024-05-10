@@ -29,6 +29,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttPersistable;
 import org.eclipse.paho.client.mqttv3.MqttToken;
 import org.eclipse.paho.client.mqttv3.internal.ExceptionHelper;
+import org.eclipse.paho.client.mqttv3.logging.Logger;
+import org.eclipse.paho.client.mqttv3.logging.LoggerFactory;
 
 /**
  * An on-the-wire representation of an MQTT message.
@@ -362,14 +364,13 @@ public abstract class MqttWireMessage {
 			byte[] encodedString = new byte[encodedLength];
 			input.readFully(encodedString);
 			String output = new String(encodedString, STRING_ENCODING);
+			output = output.replaceAll("\\p{Cntrl}", "");
 			validateUTF8String(output);
-
 			return output;
-		} catch (IOException ex) {
+		} catch (IOException | IllegalArgumentException ex) {
 			throw new MqttException(ex);
 		}
 	}
-
 	/**
 	 * Validate a UTF-8 String for suitability for MQTT.
 	 * 
@@ -402,6 +403,7 @@ public abstract class MqttWireMessage {
 				isBad = true;
 			}
 			if (isBad) {
+
 				throw new IllegalArgumentException(String.format("Invalid UTF-8 char: [%04x]", (int) c));
 			}
 		}
